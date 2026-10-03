@@ -1,0 +1,14 @@
+Best epoch: 3
+Validation Accuracy: 0.7737
+Validation macro F1: 0.7694
+Test Accuracy: 0.7905
+Test Precision macro: 0.8175
+Test Recall macro: 0.7905
+Test F1 macro: 0.7794
+Class F1: A=0.9495, B=0.8400, C=0.7653, D=0.6028, E=0.7393
+Most frequent error: actual D -> predicted C: 80
+Accuracy change vs. original 1-epoch ResNet18 (0.6526): +13.79 percentage points
+Test CSV files: 50; CWT windows: 950
+Training epoch time: 509.9 seconds
+Macro averaging; counts and scores are per CWT window. Saved split_manifest.json; no duplicate filtering.
+The original 1-epoch experiment used its previous preprocessing, so the change is descriptive rather than an isolated effect of training duration.

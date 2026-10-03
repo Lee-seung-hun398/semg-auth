@@ -1,0 +1,21 @@
+DenseNet161 partial reproduction: validation only; no test CSV loaded.
+Paper: https://www.nature.com/articles/s41598-026-46294-3
+Filtered CSV source: https://github.com/sea3551/palm-sEMG-doorknob-filtered
+Seed=42; classes=A,B,C,D,E; learning_rate=0.001; batch_size=16; maximum_epochs=45.
+Split: stratified 80/20 trial files, random_state=42; then old train 80/20 train/validation; 160/40/50 trial files.
+The 50 held-out test CSVs are listed in split_manifest.json but never loaded or evaluated in this program.
+Released data already has 60 Hz notch and 20-500 Hz band-pass; no duplicate filter here.
+Week 2's 300-sample window, 150-sample hop, window min-max and Morlet CWT are reused without changes.
+Torchvision DenseNet161 random initialization; conv0=3->96, 7x7, stride 2; classifier=2208->5.
+The paper says conv0 was adjusted and dropout used, but omits the exact conv0 replacement and dropout position/rate. These are not invented here; exact architecture reproduction remains unverified.
+Adam, cross-entropy, no scheduler (none specified by paper); model selection by validation accuracy, macro F1 tie-break.
+torch.cuda.is_available()=False
+device=cpu
+device_name=CPU
+completed_epochs=10
+best_epoch=7
+best_validation_accuracy=0.825000
+best_validation_macro_f1=0.824480
+first_epoch_seconds=441.89
+estimated_45_epochs_hours=5.52
+mean_epoch_seconds=414.84

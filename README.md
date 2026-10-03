@@ -29,24 +29,16 @@ data/
    └─ E/
 ```
 
-현재 데이터 분할은 CSV 파일 단위로 진행합니다.
-
-- Train: 80%
-- Test: 20%
-- random_state: 42
-
-파일을 먼저 Train/Test로 나눈 뒤 각 파일에서 window를 생성하기 때문에 같은 시행에서 생성된 window가 Train과 Test에 동시에 포함되지 않도록 했습니다.
+최종 비교는 CSV 파일 단위로 stratified 분할한 160개 Train / 40개 Validation / 50개 Test를 사용합니다. 먼저 기존 80:20 Train/Test 분할(`random_state=42`)을 유지하고, Train 안에서 Validation을 분리했습니다. 분할 명세는 [`split_manifest.json`](week3/reproduction/split_manifest.json)에 저장되어 있습니다. 같은 CSV에서 생성한 window가 서로 다른 집합에 섞이지 않습니다.
 
 ---
 
 ## 데이터 전처리
 
-현재 코드에서 사용하는 전처리 과정은 다음과 같습니다.
+최종 동일 조건 비교에서 사용하는 전처리 과정은 다음과 같습니다.
 
 ```text
-sEMG CSV
-→ 60 Hz notch filter
-→ 20~499 Hz band-pass filter
+sEMG CSV (배포 시 60 Hz notch 및 20~500 Hz band-pass 필터 적용됨)
 → 300 ms window
 → 150 ms hop
 → min-max normalization
@@ -55,6 +47,8 @@ sEMG CSV
 ```
 
 CWT 변환을 통해 시간 영역의 sEMG 신호를 시간-주파수 형태로 변환한 뒤 딥러닝 모델의 입력으로 사용했습니다.
+
+최종 실험에서는 이미 필터링된 배포 CSV에 notch/band-pass를 다시 적용하지 않았습니다. 초기 week2/week3 실험에는 기존 전처리 코드의 추가 필터가 적용되어 있으므로 초기 결과와 최종 결과를 학습 epoch만의 효과로 비교하지 않습니다.
 
 ---
 
@@ -74,14 +68,20 @@ semg-auth/
 │
 ├─ week3/
 │  ├─ week3.py
-│  ├─ improve.py
-│  ├─ model_comparison.csv
-│  ├─ model_comparison.png
-│  ├─ confusion_matrix_densenet161.png
-│  ├─ confusion_matrix_resnet18.png
-│  ├─ class_f1_comparison.png
-│  ├─ evaluation_summary.txt
-│  └─ improved/
+│  ├─ improved/
+│  ├─ reproduction/
+│  │  ├─ train_densenet_reproduction.py
+│  │  ├─ evaluate_best.py
+│  │  ├─ split_manifest.json
+│  │  └─ resnet/resnet_experiment.py
+│  └─ final/
+│     ├─ build_final.py
+│     ├─ model_comparison.csv
+│     ├─ model_comparison.png
+│     ├─ confusion_matrix_densenet161.png
+│     ├─ confusion_matrix_resnet18.png
+│     ├─ class_f1_comparison.png
+│     └─ evaluation_summary.txt
 │
 ├─ main.py
 ├─ README.md
@@ -100,7 +100,7 @@ semg-auth/
 
 CWT로 변환한 sEMG 데이터를 입력으로 사용하고 마지막 classifier를 사용자 5명 분류에 맞게 변경했습니다.
 
-현재 기본 비교 결과는 5 epoch 학습 모델을 기준으로 평가했습니다.
+최종 비교에는 Validation 기준 best인 7 epoch checkpoint를 사용했습니다.
 
 ### ResNet18
 
@@ -108,7 +108,7 @@ DenseNet161과 비교하기 위해 추가한 모델입니다.
 
 DenseNet161과 동일한 데이터와 전처리 결과를 사용하며 최종 출력층을 사용자 5명 분류에 맞게 변경했습니다.
 
-현재 기본 비교 결과는 1 epoch 학습 결과입니다.
+최종 비교에는 Validation 기준 best인 3 epoch checkpoint를 사용했습니다.
 
 ---
 
@@ -122,36 +122,37 @@ Python 가상환경을 활성화합니다.
 .\.venv\Scripts\activate
 ```
 
-모델 checkpoint는 GitHub에 포함하지 않았기 때문에 처음 실행하는 경우 2주차 학습을 먼저 진행합니다.
+최종 제출용 표와 그래프는 저장된 평가 CSV만으로 다시 만들 수 있습니다. 이 명령은 학습하거나 Test set을 다시 평가하지 않습니다.
 
 ```powershell
-python week2\week2.py
+python week3\final\build_final.py
 ```
 
-이후 3주차 모델 비교를 실행합니다.
+`week3/final/` 결과가 이미 있다면 덮어쓰기를 막기 위해 명령이 종료됩니다. 처음부터 재현할 때는 원본 데이터를 같은 구조로 배치하고, 아래 명령으로 학습한 뒤 Validation best checkpoint를 평가할 수 있습니다. 평가 명령은 각 모델당 Test 최초 평가 시 한 번만 실행해야 합니다.
 
 ```powershell
-python week3\week3.py
+python week3\reproduction\train_densenet_reproduction.py --until 10
+python week3\reproduction\evaluate_best.py
+python week3\reproduction\resnet\resnet_experiment.py --until 5
+python week3\reproduction\resnet\resnet_experiment.py --evaluate
 ```
 
-실행이 끝나면 `week3/` 폴더에 모델 평가 결과와 그래프가 생성됩니다.
+두 학습 모두 seed 42, Adam, learning rate 0.001, batch size 16, CrossEntropyLoss를 사용했습니다. `.pth` checkpoint는 Git에 포함하지 않았습니다. 이 저장소에는 이번 실행의 평가 CSV와 최종 그래프가 포함됩니다.
 
 ---
 
-## 현재 모델 성능 비교
+## 최종 동일 조건 모델 성능 비교
 
-현재 기본 실험 결과는 다음과 같습니다.
+두 모델은 같은 CSV 단위 split과 전처리를 사용했고, Validation Accuracy로 best checkpoint를 선택한 뒤 동일한 held-out Test 50개 CSV에서 평가했습니다. 점수는 Test CSV에서 생성한 **950개 CWT window 단위**이며 Precision, Recall, F1은 macro 평균입니다. 원본 수치는 [`model_comparison.csv`](week3/final/model_comparison.csv)에 있습니다.
 
-| Model | Accuracy | Precision (macro) | Recall (macro) | F1 (macro) |
-|---|---:|---:|---:|---:|
-| DenseNet161 | 0.8716 | 0.8781 | 0.8716 | 0.8704 |
-| ResNet18 | 0.6526 | 0.7269 | 0.6526 | 0.6176 |
+| Model | Best epoch | Validation Accuracy | Test Accuracy | Precision (macro) | Recall (macro) | F1 (macro) |
+|---|---:|---:|---:|---:|---:|---:|
+| DenseNet161 | 7 | 0.8250 | 0.8389 | 0.8409 | 0.8389 | 0.8368 |
+| ResNet18 | 3 | 0.7737 | 0.7905 | 0.8175 | 0.7905 | 0.7794 |
 
-현재 기준에서는 DenseNet161이 Accuracy와 F1-score 모두 ResNet18보다 높은 결과를 보였습니다.
+DenseNet161의 Test Accuracy가 ResNet18보다 **4.84%p** 높았습니다. DenseNet161의 **94% 재현 목표는 달성하지 못했습니다**(Test Accuracy 83.89%).
 
-단 ResNet18은 1 epoch만 학습한 초기 결과이기 때문에 모델 구조 자체의 성능 차이라고 단정하기는 어렵습니다.
-
-![모델 성능 비교](week3/model_comparison.png)
+![최종 모델 성능 비교](week3/final/model_comparison.png)
 
 ---
 
@@ -159,17 +160,15 @@ python week3\week3.py
 
 ### DenseNet161
 
-![DenseNet161 Confusion Matrix](week3/confusion_matrix_densenet161.png)
+![최종 DenseNet161 Confusion Matrix](week3/final/confusion_matrix_densenet161.png)
 
-DenseNet161에서는 사용자 A가 가장 안정적으로 분류되었습니다.
-
-가장 많이 발생한 오분류는 사용자 C를 D로 예측한 경우였습니다.
+DenseNet161의 클래스별 F1은 A 0.9767, B 0.8370, C 0.8219, D 0.8041, E 0.7442입니다.
 
 ### ResNet18
 
-![ResNet18 Confusion Matrix](week3/confusion_matrix_resnet18.png)
+![최종 ResNet18 Confusion Matrix](week3/final/confusion_matrix_resnet18.png)
 
-ResNet18에서는 사용자 E의 분류 성능이 상대적으로 낮았으며 E를 B로 잘못 분류하는 경우가 많이 나타났습니다.
+ResNet18에서는 **실제 D를 C로 예측한 경우가 80개 window**로 가장 많았습니다.
 
 ---
 
@@ -177,25 +176,21 @@ ResNet18에서는 사용자 E의 분류 성능이 상대적으로 낮았으며 E
 
 각 사용자별 F1-score를 DenseNet161과 ResNet18에서 비교했습니다.
 
-![클래스별 F1 비교](week3/class_f1_comparison.png)
+![최종 클래스별 F1 비교](week3/final/class_f1_comparison.png)
 
-DenseNet161은 전체 사용자에서 ResNet18보다 높은 F1-score를 보였습니다.
+DenseNet161은 A~E 모든 클래스에서 ResNet18보다 높은 F1-score를 기록했습니다.
 
-특히 사용자 E에서 두 모델의 성능 차이가 크게 나타났습니다.
+두 모델의 F1 차이가 가장 큰 클래스는 D입니다(DenseNet161 0.8041, ResNet18 0.6028).
 
 ---
 
 ## 결과 분석
 
-현재 기본 실험에서는 DenseNet161이 ResNet18보다 높은 사용자 분류 성능을 보였습니다.
+최종 동일 조건 비교에서는 DenseNet161이 Accuracy, macro Precision, macro Recall, macro F1 모두 높았습니다. 특히 ResNet18의 D 클래스 F1이 0.6028로 낮았고 D→C 오분류가 80개 window였습니다. 이 결과만으로 오분류 원인을 단정할 수는 없습니다.
 
-DenseNet161의 Accuracy는 약 87.16%였으며 사용자 A는 안정적으로 분류되었습니다.
+### 초기 실험 기록
 
-반면 사용자 C와 D 사이에서 일부 오분류가 발생했고 사용자 E도 다른 클래스에 비해 오분류가 많이 나타났습니다.
-
-현재 결과는 DenseNet161 5 epoch와 ResNet18 1 epoch를 비교한 결과이기 때문에 동일한 학습 조건의 최종 비교 결과는 아닙니다.
-
-현재 DenseNet161의 재현 정확도를 높이기 위한 추가 학습과 설정 비교를 진행하고 있으며 이후 ResNet18의 epoch도 증가시켜 최종 결과를 다시 비교할 예정입니다.
+초기 결과는 기존 [`week3/model_comparison.csv`](week3/model_comparison.csv)에 보존했습니다. DenseNet161 5 epoch의 Test Accuracy는 0.8716, ResNet18 1 epoch는 0.6526이었습니다. 이 초기 실험은 최종 reproduction과 전처리 조건이 달라 메인 성능표에 섞지 않았습니다.
 
 ---
 
@@ -221,4 +216,4 @@ https://github.com/sea3551/palm-sEMG-doorknob-filtered
 
 동일한 실험을 재현하려면 원본 데이터를 다운로드하여 위의 데이터 구조에 맞게 배치한 뒤 학습 코드를 실행하면 됩니다.
 
-현재 성능 수치는 기본 실험 결과이며 추가 학습이 완료되면 최종 DenseNet161과 ResNet18 결과로 갱신할 예정입니다.
+메인 성능표는 저장된 동일 조건 reproduction 결과입니다. 상세 기록은 [`week3/final/evaluation_summary.txt`](week3/final/evaluation_summary.txt)에 있습니다.
