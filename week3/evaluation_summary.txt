@@ -1,0 +1,21 @@
+Week 3 sEMG user classification
+
+Dataset: A-E, 50 trials per user; file-level stratified 80/20 split.
+Split: test_size=0.2, random_state=42; no validation set in Week 2.
+Training trials: 200; test trials: 50; test windows: 950.
+Preprocessing: Week 2 notch 60 Hz, band-pass 20-499 Hz, 300 ms windows / 150 ms hop, min-max, Morlet CWT (3, 32, 300).
+Precision, Recall, and F1 averaging: macro, zero_division=0.
+Winner by macro F1 (accuracy tie-break): DenseNet161
+
+DenseNet161: Accuracy=0.8716, Precision=0.8781, Recall=0.8716, F1=0.8704
+  Best F1 class(es): A (0.9406)
+  Most misclassified actual class(es): E (47 windows)
+  Most frequent error pair(s): C -> D (25)
+
+ResNet18: Accuracy=0.6526, Precision=0.7269, Recall=0.6526, F1=0.6176
+  Best F1 class(es): A (0.8597)
+  Most misclassified actual class(es): E (156 windows)
+  Most frequent error pair(s): E -> B (93)
+
+Class F1 gaps >= 0.05: A (0.0809; higher: DenseNet161), B (0.2000; higher: DenseNet161), C (0.1973; higher: DenseNet161), D (0.2343; higher: DenseNet161), E (0.5517; higher: DenseNet161)
+Run time: 4.0 minutes.
