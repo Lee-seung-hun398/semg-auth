@@ -74,7 +74,7 @@ def find_data_root():
 
     raise FileNotFoundError(
         "A~E 데이터 폴더를 찾지 못했습니다.\n"
-        "예상 위치: C:\\semg-auth\\data\\data\\A ~ E"
+        "예상 위치: C:\\semg-auth\\step1\\data\\data\\A ~ E"
     )
 
 

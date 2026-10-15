@@ -1,8 +1,8 @@
 """Validation-only DenseNet161 reproduction; the held-out test CSVs are never loaded.
 
 Run from the project root:
-    .venv/Scripts/python.exe -B week3/reproduction/train_densenet_reproduction.py --until 10
-    .venv/Scripts/python.exe -B week3/reproduction/train_densenet_reproduction.py --until 15 --resume
+    .venv/Scripts/python.exe -B step1/week3/reproduction/train_densenet_reproduction.py --until 10
+    .venv/Scripts/python.exe -B step1/week3/reproduction/train_densenet_reproduction.py --until 15 --resume
 
 The released CSVs are already filtered. We reuse Week 2 windowing,
 normalization, and CWT, but skip its second filtering pass.

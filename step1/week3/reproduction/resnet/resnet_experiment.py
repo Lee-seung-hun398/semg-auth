@@ -1,9 +1,9 @@
 """ResNet18 comparison on the saved reproduction split; select on validation only.
 
 Run from the project root:
-    .venv/Scripts/python.exe -B -u week3/reproduction/resnet/resnet_experiment.py --until 5
-    .venv/Scripts/python.exe -B -u week3/reproduction/resnet/resnet_experiment.py --until 10 --resume
-    .venv/Scripts/python.exe -B -u week3/reproduction/resnet/resnet_experiment.py --evaluate
+    .venv/Scripts/python.exe -B -u step1/week3/reproduction/resnet/resnet_experiment.py --until 5
+    .venv/Scripts/python.exe -B -u step1/week3/reproduction/resnet/resnet_experiment.py --until 10 --resume
+    .venv/Scripts/python.exe -B -u step1/week3/reproduction/resnet/resnet_experiment.py --evaluate
 """
 
 from __future__ import annotations

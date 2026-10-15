@@ -1,0 +1,21 @@
+﻿항목,값
+피험자 수,8
+클래스 수,8
+조건당 반복 수 (피험자별),30
+전체 trial 수 (mark 기준),1920
+sampling rate (Hz),1000
+sEMG 채널 수,5
+CSV 파일 수,64
+CSV 전체 행 수,9711953
+분석 trial 길이,5초 / 5000 samples (mark 기준 잠정 창)
+실제 mark 간격,4999~5001 samples
+mark 의미,trial 시작점인지 미확정
+프로토콜,휴식 2초 + 동작 1초 + 휴식 2초
+30_fist trial 수,240
+30_open trial 수,240
+30_pronation trial 수,240
+30_supination trial 수,240
+60_fist trial 수,240
+60_open trial 수,240
+60_pronation trial 수,240
+60_supination trial 수,240
